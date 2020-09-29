@@ -37,49 +37,35 @@ with this policy.
 
 ## How To try tracing-atrace.<only for linux>
 1.first compile tracing-atrace.
-#cargo build
+$cargo build
 
 2.after compile correctly, check your linux kernel should support debugfs feature,and
 then use the following commands to setup debufs  for tracing.
 
-#sudo umount debugfs
-#sudo mount -t debugfs none /sys/kernel/debug/
-#sudo mount -t debugfs -o rw,mode=777,remount /sys/kernel/debug/
-#sudo chmod -R 777 /sys/kernel/debug
+$sudo umount debugfs
+$sudo mount -t debugfs none /sys/kernel/debug/
+$sudo mount -t debugfs -o rw,mode=777,remount /sys/kernel/debug/
+$sudo chmod -R 777 /sys/kernel/debug
 
 3.go to target out dir, run atrace, if its output like the following, that's
 good time for tracing.
-#./atrace
-
-//default atrace output.
-# tracer: nop
-#
-# entries-in-buffer/entries-written: 1/1   #P:4
-#
-#                              _-----=> irqs-off
-#                             / _----=> need-resched
-#                            | / _---=> hardirq/softirq
-#                            || / _--=> preempt-depth
-#                            ||| /     delay
-#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-#              | |       |   ||||       |         |
-           <...>-20379 [001] .... 25354.295427: tracing_mark_write: trace_event_clock_sync: parent_ts=9000000
+$./atrace
 
 4.capture your app's tracing. look example and atrace help for more
 informations.
 in one shell
-#./atrace -T 10 > trace.log
+$./atrace -T 10 > trace.log
 
 in another shell
-#./example
+$./example
 
 when atrace run finish, it'll get one trace.log.
 
 5.open chrome browser,and enter chrome://tracing/ in url address.
 in its load button, select trace.log, you'll get your tracing result.
 
-![tracing result example][screenshot]
-[screenshot]https://github.com/Grainspring/tracing-atrace/tracing.result.png
+tracing result example.
+https://github.com/Grainspring/tracing-atrace/blob/master/tracing.result.png
 
 Good time.
 

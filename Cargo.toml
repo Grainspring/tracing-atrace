@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "tracing",
+    "libatrace",
+    "atrace",
+    "example",
+]

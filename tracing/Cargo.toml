@@ -1,0 +1,20 @@
+[package]
+name = "tracing-atrace"
+version = "0.1.0"
+authors = ["Grain Spring<sukzhong@waterock.ai>"]
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+description = "use linux kernel debug tracing subscriber for `tracing`"
+categories = [
+    "development-tools::debugging",
+    "development-tools::profiling",
+]
+keywords = ["tracing", "kenel debug tracing", "debugfs"]
+
+[dependencies]
+tracing = { version = "0.1.10" }
+tracing-core = { version = "0.1.10" }
+tracing-subscriber = { version = "0.2.5" }
+tracing-futures = { version = "0.2" }
+libatrace = { path = "../libatrace" }

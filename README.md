@@ -37,26 +37,33 @@ with this policy.
 
 ## How To try tracing-atrace.<only for linux>
 1.first compile tracing-atrace.
+
 $cargo build
 
 2.after compile correctly, check your linux kernel should support debugfs feature,and
 then use the following commands to setup debufs  for tracing.
 
 $sudo umount debugfs
+
 $sudo mount -t debugfs none /sys/kernel/debug/
+
 $sudo mount -t debugfs -o rw,mode=777,remount /sys/kernel/debug/
+
 $sudo chmod -R 777 /sys/kernel/debug
 
 3.go to target out dir, run atrace, if its output like the following, that's
 good time for tracing.
+
 $./atrace
 
 4.capture your app's tracing. look example and atrace help for more
 informations.
+
 in one shell
 $./atrace -T 10 > trace.log
 
 in another shell
+
 $./example
 
 when atrace run finish, it'll get one trace.log.

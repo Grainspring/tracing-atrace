@@ -6,18 +6,13 @@
 
 Support for logging [`tracing`][tracing] events natively to linux kernel debug tracing.
 
-[![Crates.io][crates-badge]][crates-url]
-[![Documentation (master)][docs-master-badge]][docs-master-url]
-[![MIT licensed][mit-badge]][mit-url]
-![maintenance status][maint-badge]
-
 [crates-url]: https://crates.io/crates/tracing-atrace
 
 ## Overview
 
 [`tracing`] is a framework for instrumenting Rust programs to collect
 scoped, structured, and async-aware diagnostics. `tracing-atrace` provides a
-[`tracing-subscriber::Layer`][layer] implementation for logging `tracing` spans
+[`tracing-atrace::Layer`][layer] implementation for logging `tracing` spans
 and events to [`linux kernel debug tracing`][kernel debug], on Linux
 distributions that use debugfs.
  
@@ -39,6 +34,54 @@ compiler version is 1.45, the minimum supported version will not be increased
 past 1.42, three minor versions prior. Increasing the minimum supported compiler
 version is not considered a semver breaking change as long as doing so complies
 with this policy.
+
+## How To try tracing-atrace.<only for linux>
+1.first compile tracing-atrace.
+#cargo build
+
+2.after compile correctly, check your linux kernel should support debugfs feature,and
+then use the following commands to setup debufs  for tracing.
+
+#sudo umount debugfs
+#sudo mount -t debugfs none /sys/kernel/debug/
+#sudo mount -t debugfs -o rw,mode=777,remount /sys/kernel/debug/
+#sudo chmod -R 777 /sys/kernel/debug
+
+3.go to target out dir, run atrace, if its output like the following, that's
+good time for tracing.
+#./atrace
+
+//default atrace output.
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 1/1   #P:4
+#
+#                              _-----=> irqs-off
+#                             / _----=> need-resched
+#                            | / _---=> hardirq/softirq
+#                            || / _--=> preempt-depth
+#                            ||| /     delay
+#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+#              | |       |   ||||       |         |
+           <...>-20379 [001] .... 25354.295427: tracing_mark_write: trace_event_clock_sync: parent_ts=9000000
+
+4.capture your app's tracing. look example and atrace help for more
+informations.
+in one shell
+#./atrace -T 10 > trace.log
+
+in another shell
+#./example
+
+when atrace run finish, it'll get one trace.log.
+
+5.open chrome browser,and enter chrome://tracing/ in url address.
+in its load button, select trace.log, you'll get your tracing result.
+
+![tracing result example][screenshot]
+[screenshot]https://github.com/Grainspring/tracing-atrace/tracing.result.png
+
+Good time.
 
 ## License
 

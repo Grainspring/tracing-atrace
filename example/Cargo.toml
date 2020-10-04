@@ -10,3 +10,17 @@ edition = "2018"
 libatrace = { path = "../libatrace" }
 libc = "0.2.48"
 futures = "0.3.0"
+futures-core = "0.3"
+tokio = { version = "0.2.12", features = ["full", "tracing"] }
+tokio-util = { version = "0.2.0", features = ["full"] }
+bytes = { version = "0.5.6", features = [] }
+tracing-subscriber = { version = "0.2.12", features = ["json", "chrono"] }
+tracing = { version="0.1" }
+tracing-atrace = { version="0.1.0", path = "../tracing" }
+tracing-core = "0.1"
+tracing-attributes =  "0.1.2"
+tracing-futures =  { version = "0.2.1", features = ["futures-01"] }
+
+[[example]]
+name="chat"
+path="chat.rs"

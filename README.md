@@ -60,6 +60,7 @@ $./atrace
 informations.
 
 in one shell
+
 $./atrace -T 10 > trace.log
 
 in another shell
@@ -74,7 +75,23 @@ in its load button, select trace.log, you'll get your tracing result.
 tracing result example.
 https://github.com/Grainspring/tracing-atrace/blob/master/tracing.result.png
 
-Good time.
+6.try tracing future
+
+$cargo build --example chat
+
+$cd target/debug/examples && ./chat
+
+//for compress atrace log
+
+$./atrace -T 30 -Z > atrace.log.z
+
+$telnet 127.0.0.1 6142
+
+//uncompress atrace log
+
+$./atrace -d atrace.log.z > atrace.log
+
+Good time for tracing&profile futures.
 
 ## License
 

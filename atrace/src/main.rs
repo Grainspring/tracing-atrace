@@ -326,7 +326,7 @@ fn set_trace_buffer_size(size: u32) -> bool {
 
 // Disable all kernel trace events.
 fn disable_kernel_trace_events() -> bool {
-    let ret = true;
+    let mut ret = true;
     // TODO: support categories
     /*
         for (int i = 0; i < ELEM_COUNT(k_categories); i++)
@@ -342,6 +342,45 @@ fn disable_kernel_trace_events() -> bool {
             }
         }
     */
+    // sched
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), false);
+    }
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_wakeup/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_wakeup/enable"), false);
+    }
+    /*
+    // freq
+    if file_is_writable(&strcat_for_file_path("events/power/cpu_frequency/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_frequency/enable"), false);
+    }
+
+    if file_is_writable(&strcat_for_file_path("events/power/clock_set_rate/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/power/clock_set_rate/enable"), false);
+    }
+
+    // idle
+    if file_is_writable(&strcat_for_file_path("events/power/cpu_idle/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_idle/enable"), false);
+    }
+
+    // disk
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), false);
+    }
+    if file_is_writable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable"), false);
+    }
+    if file_is_writable(&strcat_for_file_path("events/block/block_rq_issue/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/block/block_rq_issue/enable"), false);
+    }
+
+    // workqueue
+    if file_is_writable(&strcat_for_file_path("events/workqueuq/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/workqueue/enable"), false);
+    }
+*/
+//    println!("after disable_kernel_trace_events");
     return ret;
 }
 
@@ -844,7 +883,47 @@ fn setup_trace(config: &Config) -> bool {
     // Handles kernel trace events tags like "sched freq".
     // First, disable all the events.
     ret &= disable_kernel_trace_events();
+
     // TODO: support categores
     // Then set enabeld events which passed in by args.
+    // sched
+
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), true);
+    }
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_wakeup/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_wakeup/enable"), true);
+    }
+
+    /*
+    // freq
+    if file_is_writable(&strcat_for_file_path("events/power/cpu_frequency/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_frequency/enable"), true);
+    }
+    if file_is_writable(&strcat_for_file_path("events/power/clock_set_rate/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/clock_set_rate/enable"), true);
+    }
+
+    // idle
+    if file_is_writable(&strcat_for_file_path("events/power/cpu_idle/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_idle/enable"), true);
+    }
+
+    // disk
+    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), true);
+    }
+    if file_is_writable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable"), true);
+    }
+    if file_is_writable(&strcat_for_file_path("events/block/block_rq_issue/enable")) {
+        ret &= set_kernel_option_enable(&strcat_for_file_path("events/block/block_rq_issue/enable"), true);
+    }
+
+    // workqueue
+    if file_is_writable(&strcat_for_file_path("events/workqueue/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/workqueue/enable"), true);
+    }
+    */
     ret
 }

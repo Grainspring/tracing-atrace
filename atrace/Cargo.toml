@@ -1,13 +1,10 @@
 [package]
 name = "atrace"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["sukzhong"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-libatrace = { path = "../libatrace" }
 libc = "0.2.48"
-clap = { version = ">=2.27.1", default-features = false}
+clap = { version = "=2.27.1", default-features = false }
 libz-sys = "1.0.25"

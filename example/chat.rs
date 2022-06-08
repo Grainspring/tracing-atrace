@@ -44,10 +44,10 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use tracing_subscriber::{prelude::*, registry::Registry};
+use tracing::{debug_span, span, Level};
+use tracing_futures::Instrument as OthInstrument;
 use tracing_attributes::instrument;
-use tracing::{span, Level, debug_span};
-use tracing_atrace::InstrumentExt;
+use tracing_subscriber::{prelude::*, registry::Registry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -75,13 +75,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         // Asynchronously wait for an inbound TcpStream.
         let (stream, addr) = listener.accept().await?;
-        span!(Level::INFO, "accept").in_scope(||{
-
+        span!(Level::INFO, "accept").in_scope(|| {
             // Clone a handle to the `Shared` state for the new connection.
             let state = Arc::clone(&state);
             // Spawn our handler to be run asynchronously.
             // trace_macros!(true);
-            span!(Level::ERROR, "spawn").in_scope(||{
+            span!(Level::ERROR, "spawn").in_scope(|| {
                 tokio::spawn(async move {
                     tracing::info!("accepted connection");
                     println!("accepted connection");
@@ -97,7 +96,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn setup_global_subscriber() {
-    let _layer = tracing_atrace::layer().unwrap().with_data_field(Option::Some("data".to_string()));
+    let _layer = tracing_libatrace::layer()
+        .unwrap()
+        .with_data_field(Option::Some("data".to_string()));
     let subscriber = Registry::default().with(_layer);
     tracing::subscriber::set_global_default(subscriber).unwrap();
 }
@@ -219,10 +220,17 @@ async fn process(
 ) -> Result<(), Box<dyn Error>> {
     let mut lines = Framed::new(stream, LinesCodec::new());
     // Send a prompt to the client to enter their username.
-    lines.send("Please enter your username:".to_string()).instrument(debug_span!("send_username", __fut=0)).await?;
+    lines
+        .send("Please enter your username:".to_string())
+        .instrument(debug_span!("send_username", __fut = 0))
+        .await?;
 
     // Read the first line from the `LineCodec` stream to get the username.
-    let username = match lines.next().instrument(debug_span!("get_usename", __fut = 0, data = "")).await {
+    let username = match lines
+        .next()
+        .instrument(debug_span!("get_usename", __fut = 0, data = ""))
+        .await
+    {
         Some(Ok(line)) => line,
         // We didn't get a line so we return early here.
         _ => {
@@ -232,7 +240,9 @@ async fn process(
     };
 
     // Register our peer with state which internally sets up some channels.
-    let mut peer = Peer::new(state.clone(), lines).instrument(debug_span!("new_peer", __fut=0)).await?;
+    let mut peer = Peer::new(state.clone(), lines)
+        .instrument(debug_span!("new_peer", __fut = 0))
+        .await?;
 
     // A client has connected, let's let everyone know.
     {
@@ -240,11 +250,18 @@ async fn process(
         let msg = format!("{} has joined the chat", username);
         tracing::info!("{}", msg);
         println!("{}", msg);
-        state.broadcast(addr, &msg).instrument(debug_span!("broadcast_newuser")).await;
+        state
+            .broadcast(addr, &msg)
+            .instrument(debug_span!("broadcast_newuser"))
+            .await;
     }
 
     // Process incoming messages until our stream is exhausted by a disconnect.
-    while let Some(result) = peer.next().instrument(debug_span!("peer_incoming", __fut="")).await {
+    while let Some(result) = peer
+        .next()
+        .instrument(debug_span!("peer_incoming", __fut = ""))
+        .await
+    {
         match result {
             // A message was received from the current user, we should
             // broadcast this message to the other users.
@@ -252,12 +269,18 @@ async fn process(
                 let mut state = state.lock().instrument(debug_span!("lock state.bm")).await;
                 let msg = format!("{}: {}", username, msg);
                 tracing::info!("bc msg:from {} {}", username, msg);
-                state.broadcast(addr, &msg).instrument(debug_span!("bc_msg")).await;
+                state
+                    .broadcast(addr, &msg)
+                    .instrument(debug_span!("bc_msg"))
+                    .await;
             }
             // A message was received from a peer. Send it to the
             // current user.
             Ok(Message::Received(msg)) => {
-                peer.lines.send(msg).instrument(debug_span!("sendmsg_peer")).await?;
+                peer.lines
+                    .send(msg)
+                    .instrument(debug_span!("sendmsg_peer"))
+                    .await?;
             }
             Err(e) => {
                 tracing::error!(
@@ -278,7 +301,10 @@ async fn process(
         let msg = format!("{} has left the chat", username);
         tracing::info!("{}", msg);
         println!("{}", msg);
-        state.broadcast(addr, &msg).instrument(debug_span!("bc_user left")).await;
+        state
+            .broadcast(addr, &msg)
+            .instrument(debug_span!("bc_user left"))
+            .await;
     }
 
     Ok(())

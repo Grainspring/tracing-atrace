@@ -16,6 +16,7 @@ pub struct Config {
     pub stream: bool,
     pub funcs: String,
     pub group: Vec<String>,
+    pub cpu_sched: bool,
 }
 
 pub fn parse_options() -> Config {
@@ -110,6 +111,12 @@ pub fn parse_options() -> Config {
                 .takes_value(false),
         )
         .arg(Arg::with_name("Group").multiple(true))
+        .arg(
+            Arg::with_name("CPU_SCHED")
+                .long("CPU_SCHED")
+                .help("capture all cpu schedule infos")
+                .takes_value(false),
+        )
         .get_matches();
 
     let debug_cmdline = cmd_arguments.value_of("A").unwrap_or("").to_string();
@@ -147,7 +154,7 @@ pub fn parse_options() -> Config {
     let _group = cmd_arguments
         .values_of("Group")
         .map(|vals| vals.collect::<Vec<_>>());
-
+    let cpu_sched = cmd_arguments.is_present("CPU_SCHED");
     Config {
         debug_cmdline,
         buflen,
@@ -164,5 +171,6 @@ pub fn parse_options() -> Config {
         show_category,
         stream,
         group: vec![],
+        cpu_sched,
     }
 }

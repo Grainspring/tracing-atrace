@@ -73,7 +73,7 @@ when atrace run finish, it'll get one trace.log.
 in its load button, select trace.log, you'll get your tracing result.
 
 tracing result example.
-https://github.com/Grainspring/tracing-atrace/blob/master/tracing.result.png
+![chat tracing](http://grainspring.github.io/imgs/chat.tracing.png)
 
 6.try tracing future
 
@@ -82,14 +82,21 @@ $cargo build --example chat
 $cd target/debug/examples && ./chat
 
 //for compress atrace log
-
 $./atrace -T 30 -Z > atrace.log.z
 
-$telnet 127.0.0.1 6142
+$telnet localhost 6142
 
 //uncompress atrace log
-
 $./atrace -d atrace.log.z > atrace.log
+
+//capture cpu schedule infos.
+//it'll have big size log file with cpu scheduleinfos.
+$./atrace -T 30 -Z --CPU_SCHED > atrace.log.z
+![chat tracing with cpu schedule infos](http://grainspring.github.io/imgs/chat.tracing.with.cpu.sched.png)
+
+7.tracing rustc examples
+![rustc typeck_fn tracing](http://grainspring.github.io/imgs/tracing.rustc.typeck_fn.png)
+![rustc borrowck tracing](http://grainspring.github.io/imgs/tracing.rustc.mir_borrowck.png)
 
 Good time for tracing&profile futures.
 

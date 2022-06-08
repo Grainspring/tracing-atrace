@@ -1,4 +1,6 @@
-use libatrace::{trace_begin, trace_end, ScopedTrace, TRACE_NAME, TRACE_NAME2, TRACE_BEGIN, TRACE_END};
+use libatrace::{
+    trace_begin, trace_end, ScopedTrace, TRACE_BEGIN, TRACE_END, TRACE_NAME, TRACE_NAME2,
+};
 
 fn f1() {
     TRACE_BEGIN!("f1");
@@ -7,8 +9,8 @@ fn f1() {
     println!("in f1 fn");
     i += 1;
     {
-       TRACE_BEGIN!("f1 sub block");
-       TRACE_END!();
+        TRACE_BEGIN!("f1 sub block");
+        TRACE_END!();
     }
     println!("in f1 i:{}", i);
     {

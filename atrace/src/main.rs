@@ -1,9 +1,9 @@
 #[macro_use(crate_version, crate_authors)]
 extern crate clap;
 use libc::{
-    access, c_int, c_void, close, creat, free, malloc, memset, open, read, sendfile,
-    sigaction, sigfillset, siginfo_t, sigset_t, write, EINVAL, F_OK, O_RDWR, SIGHUP, SIGINT,
-    SIGQUIT, SIGSYS, SIGTERM, STDOUT_FILENO, W_OK,
+    access, c_int, c_void, close, creat, free, malloc, memset, open, read, sendfile, sigaction,
+    sigfillset, siginfo_t, sigset_t, write, EINVAL, F_OK, O_RDWR, SIGHUP, SIGINT, SIGQUIT, SIGSYS,
+    SIGTERM, STDOUT_FILENO, W_OK,
 };
 use libz_sys::{
     self, deflate, deflateEnd, deflateInit_, inflate, inflateEnd, inflateInit_, z_stream,
@@ -17,7 +17,7 @@ use std::io::Write as IoWrite;
 use std::io::{self};
 use std::mem;
 use std::os::raw::c_char;
-use std::os::unix::io::{IntoRawFd};
+use std::os::unix::io::IntoRawFd;
 use std::process::exit;
 use std::ptr::null_mut;
 use std::string::String;
@@ -108,13 +108,11 @@ extern "C" fn sigsys_handler(_num: c_int, info: *mut siginfo_t, _unused: *mut c_
 }
 
 fn file_is_exist(filename: &str) -> bool {
-    // return access(filename, F_OK) != -1;
     let ret = unsafe { access(filename.as_ptr() as *const c_char, F_OK) };
     return ret != -1;
 }
 
 fn file_is_writable(filename: &str) -> bool {
-    // return access(filename, W_OK) != -1;
     let ret = unsafe { access(filename.as_ptr() as *const c_char, W_OK) };
     return ret != -1;
 }
@@ -178,7 +176,6 @@ fn is_traceclock_mode(mode: &str) -> bool {
     } else {
         let mut contents = String::new();
         let r = fd.unwrap().read_to_string(&mut contents);
-        // println!("after read:{:?}, ret:{:?}", contents, r);
         if r.unwrap() > 0 {
             let f = contents.find("[");
             if f.is_none() {
@@ -186,7 +183,6 @@ fn is_traceclock_mode(mode: &str) -> bool {
             }
             let mut index = f.unwrap();
             index += 1;
-            // println!("after index:{:?}", index);
             let ff = contents[index..].find("]");
             if f.is_none() {
                 return false;
@@ -197,7 +193,6 @@ fn is_traceclock_mode(mode: &str) -> bool {
                 return true;
             }
         } else {
-            // println!("error reading:{:?}\n", filename);
             return false;
         }
     }
@@ -205,55 +200,8 @@ fn is_traceclock_mode(mode: &str) -> bool {
 }
 
 // Stream trace to stdout.
-/*
-trace_pipe:
-
-    The output is the same as the "trace" file but this
-    file is meant to be streamed with live tracing.
-    Reads from this file will block until new data is
-    retrieved.  Unlike the "trace" file, this file is a
-    consumer. This means reading from this file causes
-    sequential reads to display more current data. Once
-    data is read from this file, it is consumed, and
-    will not be read again with a sequential read. The
-    "trace" file is static, and if the tracer is not
-    adding more data, it will display the same
-    information every time it is read. This file will not
-    disable tracing while being read.
- */
 fn stream_trace() {
     // TODO: support stream trace with trace_pipe.
-    /*
-        char trace_data[4096];
-        int traceFD = open(strcat_for_file_path("trace_pipe"), O_RDWR);
-        if (traceFD == -1)
-        {
-            fprintf(stderr, "error opening trace_pipe: %s (%d)\n", strerror(errno), errno);
-            return;
-        }
-        while (!G_TRACE_ABORTED)
-        {
-            ssize_t bytes_read = read(traceFD, trace_data, 4096);
-            if (bytes_read > 0)
-            {
-                ssize_t bytes_write = write(STDOUT_FILENO, trace_data, bytes_read);
-                if (bytes_write < bytes_read)
-                {
-                    fprintf(stderr, "writes to stdout returned %zd bytes, err %s (%d)\n",
-                        bytes_write, strerror(errno), errno);
-                }
-                fflush(stdout);
-            } else
-            {
-                if (!G_TRACE_ABORTED)
-                {
-                    fprintf(stderr, "read returned %zd bytes, err %s (%d)\n",
-                        bytes_read, strerror(errno), errno);
-                }
-                break;
-            }
-        }
-    */
 }
 
 /*
@@ -325,38 +273,39 @@ fn set_trace_buffer_size(size: u32) -> bool {
 }
 
 // Disable all kernel trace events.
-fn disable_kernel_trace_events() -> bool {
+fn disable_kernel_trace_events(config: &Config) -> bool {
     let mut ret = true;
     // TODO: support categories
-    /*
-        for (int i = 0; i < ELEM_COUNT(k_categories); i++)
-        {
-            const Tracing_Category &c = k_categories[i];
-            for (int j = 0; j < MAX_SYS_FILES; j++)
-            {
-                const char* path = c.sysfiles[j].path;
-                if (path != NULL && file_is_writable(path))
-                {
-                    ret &= set_kernel_option_enable(path, false);
-                }
-            }
-        }
-    */
     // sched
     if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), false);
+        ret &= set_kernel_option_enable(
+            &strcat_for_file_path("events/sched/sched_switch/enable"),
+            config.cpu_sched,
+        );
     }
     if file_is_writable(&strcat_for_file_path("events/sched/sched_wakeup/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_wakeup/enable"), false);
+        set_kernel_option_enable(
+            &strcat_for_file_path("events/sched/sched_wakeup/enable"),
+            config.cpu_sched,
+        );
     }
-    /*
+    // workqueue for thread name
+    if file_is_writable(&strcat_for_file_path("events/workqueuq/enable")) {
+        set_kernel_option_enable(&strcat_for_file_path("events/workqueue/enable"), true);
+    }
     // freq
     if file_is_writable(&strcat_for_file_path("events/power/cpu_frequency/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_frequency/enable"), false);
+        set_kernel_option_enable(
+            &strcat_for_file_path("events/power/cpu_frequency/enable"),
+            false,
+        );
     }
 
     if file_is_writable(&strcat_for_file_path("events/power/clock_set_rate/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/power/clock_set_rate/enable"), false);
+        set_kernel_option_enable(
+            &strcat_for_file_path("events/power/clock_set_rate/enable"),
+            false,
+        );
     }
 
     // idle
@@ -364,65 +313,12 @@ fn disable_kernel_trace_events() -> bool {
         set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_idle/enable"), false);
     }
 
-    // disk
-    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), false);
-    }
-    if file_is_writable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable"), false);
-    }
-    if file_is_writable(&strcat_for_file_path("events/block/block_rq_issue/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/block/block_rq_issue/enable"), false);
-    }
-
-    // workqueue
-    if file_is_writable(&strcat_for_file_path("events/workqueuq/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/workqueue/enable"), false);
-    }
-*/
-//    println!("after disable_kernel_trace_events");
     return ret;
 }
 
 fn verify_kernel_trace_funcs(_funcs: &str) -> bool {
     // TODO:verify funcs
     return true;
-    /*
-        int fd = open(strcat_for_file_path("set_ftrace_filter"), O_RDONLY);
-        if (fd == -1)
-        {
-            return false;
-        }
-        char buf[4097];
-        ssize_t n = read(fd, buf, 4096);
-        close(fd);
-        if (n == -1)
-        {
-            return false;
-        }
-
-        buf[n] = '\0';
-        char funcList[5000] = {0};
-        snprintf(funcList, 5000, "\n%s", buf);
-
-        bool ret = true;
-        char* myFuncs = strdup(funcs);
-        char* func = strtok(myFuncs, ",");
-        while (func)
-        {
-            char fancyFunc[500] = {0};
-            snprintf(fancyFunc, 500, "\n%s\n", func);
-            bool found = strstr(funcList, fancyFunc);
-            if (!found || func[0] == '\0')
-            {
-                ret = false;
-            }
-            func = strtok(NULL, ",");
-        }
-        free(myFuncs);
-
-        return ret;
-    */
 }
 
 // Set kernel funcs to trace by a comma separated list.
@@ -445,31 +341,6 @@ fn set_kernel_trace_funcs(funcs: &str) -> bool {
         ret &= set_kernel_option_enable(&strcat_for_file_path("options/funcgraph-proc"), true);
         ret &= set_kernel_option_enable(&strcat_for_file_path("options/funcgraph-flat"), true);
         ret &= truncate_file(&strcat_for_file_path("set_ftrace_filter"));
-        /*
-        // TODO:filter funcs
-                char* myFuncs = strdup(funcs);
-                char* func = strtok(myFuncs, ",");
-                while (func)
-                {
-                    ret &= write_string(strcat_for_file_path("set_ftrace_filter"), func,O_APPEND|O_WRONLY);
-                    func = strtok(NULL, ",");
-                }
-                free(myFuncs);
-
-                if (ret)
-                {
-                    ret &= verify_kernel_trace_funcs(funcs);
-                }
-        //
-        let it = funcs.split(",");
-        it.map(|str| {
-            ret &= write_string(
-                &strcat_for_file_path("set_ftrace_filter"),
-                str,
-                O_APPEND | O_WRONLY,
-            )
-        });
-        */
         if ret {
             ret &= verify_kernel_trace_funcs(funcs);
         }
@@ -493,7 +364,6 @@ fn write_string(filename: &str, str: &str) -> bool {
         ret = false;
     } else {
         let r = f.unwrap().write(str.as_bytes());
-        // println!("after wirte:{:?}, ret:{:?}", str, r);
         if r.unwrap() != str.len() {
             ret = false;
         }
@@ -506,14 +376,6 @@ fn trace_write_string(filename: &str, str: &str) -> bool {
 }
 
 fn write_clock_sync_marker() {
-    /*
-    char buffer[128];
-    struct timespec st;
-    st.tv_sec = st.tv_nsec = 0;
-    clock_gettime(CLOCK_MONOTONIC, &st);
-    double now_in_seconds = st.tv_sec + (double)st.tv_nsec / 1000000000.0;
-    snprintf(buffer, 128, "trace_event_clock_sync: parent_ts=%lf\n", now_in_seconds);
-    */
     // TODO:with real time
     trace_write_string(
         &strcat_for_file_path("trace_marker"),
@@ -538,8 +400,8 @@ fn strcat_for_file_path(str: &str) -> String {
 }
 
 // Clean up trace settings.
-fn cleanup_trace() {
-    disable_kernel_trace_events();
+fn cleanup_trace(config: &Config) {
+    disable_kernel_trace_events(config);
     set_trace_recordcmd_enable(false);
     set_trace_overwrite_enable(true);
     set_trace_buffer_size(1);
@@ -806,7 +668,6 @@ fn main() {
 
     // check uncompress trace content in args.
     if !config.uncompress_file.is_empty() {
-        // println!("uncompress trace file, no capture trace");
         let result = uncompress_trace(&config);
         exit(result);
     }
@@ -853,7 +714,7 @@ fn main() {
     }
 
     if stop {
-        cleanup_trace();
+        cleanup_trace(&config);
     }
 }
 
@@ -882,48 +743,7 @@ fn setup_trace(config: &Config) -> bool {
 
     // Handles kernel trace events tags like "sched freq".
     // First, disable all the events.
-    ret &= disable_kernel_trace_events();
+    ret &= disable_kernel_trace_events(config);
 
-    // TODO: support categores
-    // Then set enabeld events which passed in by args.
-    // sched
-
-    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), true);
-    }
-    if file_is_writable(&strcat_for_file_path("events/sched/sched_wakeup/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_wakeup/enable"), true);
-    }
-
-    /*
-    // freq
-    if file_is_writable(&strcat_for_file_path("events/power/cpu_frequency/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_frequency/enable"), true);
-    }
-    if file_is_writable(&strcat_for_file_path("events/power/clock_set_rate/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/clock_set_rate/enable"), true);
-    }
-
-    // idle
-    if file_is_writable(&strcat_for_file_path("events/power/cpu_idle/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/power/cpu_idle/enable"), true);
-    }
-
-    // disk
-    if file_is_writable(&strcat_for_file_path("events/sched/sched_switch/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/sched/sched_switch/enable"), true);
-    }
-    if file_is_writable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("ext4/ext4_sync_file_exit/enable"), true);
-    }
-    if file_is_writable(&strcat_for_file_path("events/block/block_rq_issue/enable")) {
-        ret &= set_kernel_option_enable(&strcat_for_file_path("events/block/block_rq_issue/enable"), true);
-    }
-
-    // workqueue
-    if file_is_writable(&strcat_for_file_path("events/workqueue/enable")) {
-        set_kernel_option_enable(&strcat_for_file_path("events/workqueue/enable"), true);
-    }
-    */
     ret
 }

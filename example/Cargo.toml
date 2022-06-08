@@ -4,22 +4,19 @@ version = "0.1.0"
 authors = ["sukzhong"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-libatrace = { path = "../libatrace" }
 libc = "0.2.48"
 futures = "0.3.0"
 futures-core = "0.3"
 tokio = { version = "0.2.12", features = ["full", "tracing"] }
 tokio-util = { version = "0.2.0", features = ["full"] }
 bytes = { version = "0.5.6", features = [] }
-tracing-subscriber = { version = "0.2.12", features = ["json", "chrono"] }
 tracing = { version="0.1" }
-tracing-atrace = { version="0.1.0", path = "../tracing" }
-tracing-core = "0.1"
 tracing-attributes =  "0.1.2"
+tracing-core = "0.1"
 tracing-futures =  { version = "0.2.1", features = ["futures-01"] }
+tracing-libatrace = { git = "https://github.com/Grainspring/tracing-libatrace.git" }
+tracing-subscriber = { version = "0.3", features = ["registry", "fmt", "std"], default-features = false }
 
 [[example]]
 name="chat"

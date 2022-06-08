@@ -45,8 +45,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 use tracing::{debug_span, span, Level};
-use tracing_futures::Instrument as OthInstrument;
 use tracing_attributes::instrument;
+use tracing_futures::Instrument as OthInstrument;
 use tracing_subscriber::{prelude::*, registry::Registry};
 
 #[tokio::main]

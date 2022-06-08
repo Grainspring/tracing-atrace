@@ -36,13 +36,13 @@ version is not considered a semver breaking change as long as doing so complies
 with this policy.
 
 ## How To try tracing-atrace.<only for linux>
-1.first compile tracing-atrace.
-
+### 1.first compile tracing-atrace.
+```
 $cargo build
+```
 
-2.after compile correctly, check your linux kernel should support debugfs feature,and
-then use the following commands to setup debufs  for tracing.
-
+### 2.check your linux kernel support debugfs or not
+```
 $sudo umount debugfs
 
 $sudo mount -t debugfs none /sys/kernel/debug/
@@ -50,62 +50,69 @@ $sudo mount -t debugfs none /sys/kernel/debug/
 $sudo mount -t debugfs -o rw,mode=777,remount /sys/kernel/debug/
 
 $sudo chmod -R 777 /sys/kernel/debug
+```
 
-3.go to target out dir, run atrace, if its output like the following, that's
-good time for tracing.
-
-$./atrace
-
-4.capture your app's tracing. look example and atrace help for more
-informations.
-
-in one shell
-
-$./atrace -T 10 > trace.log
-
-in another shell
-
-$./example
-
-when atrace run finish, it'll get one trace.log.
-
-5.open chrome browser,and enter chrome://tracing/ in url address.
-in its load button, select trace.log, you'll get your tracing result.
-
-tracing result example.
-![chat tracing](http://grainspring.github.io/imgs/chat.tracing.png)
-
-6.try tracing future
-
-$cargo build --example chat
-
+### 3.run app example chat
+```
+// one chat server
+$cargo run --example chat
+or
 $cd target/debug/examples && ./chat
 
-//for compress atrace log
+// as chat client and enter key.
+$telnet localhost 6142
+```
+
+### 4.run atrace to get chat's tracing log.
+```
+// normal capture
+$./atrace -T 10 > trace.log
+
+// capture compress atrace log
 $./atrace -T 30 -Z > atrace.log.z
 
-$telnet localhost 6142
-
-//uncompress atrace log
+// uncompress atrace log
 $./atrace -d atrace.log.z > atrace.log
+```
 
-//capture cpu schedule infos.
-//it'll have big size log file with cpu scheduleinfos.
+### 5.view tracing log
+open chrome browser,and enter chrome://tracing in url address.
+
+in its load button, select your trace.log, you'll get your tracing result.
+
+chat tracing result example:
+
+![chat tracing](http://grainspring.github.io/imgs/chat.tracing.png)
+
+
+### 6.atrace options found in help
+```
+$./atrace --help
+
+// capture cpu schedule infos.
+// it'll have big size log file with cpu scheduleinfos.
 $./atrace -T 30 -Z --CPU_SCHED > atrace.log.z
+```
+
+### 7.oth tracing log examples
+#### chat tracing with cpu schedule infos
+
 ![chat tracing with cpu schedule infos](http://grainspring.github.io/imgs/chat.tracing.with.cpu.sched.png)
 
-7.tracing rustc examples
+#### rustc typeck_fn tracing
 ![rustc typeck_fn tracing](http://grainspring.github.io/imgs/tracing.rustc.typeck_fn.png)
+
+#### rustc borrowck tracing
 ![rustc borrowck tracing](http://grainspring.github.io/imgs/tracing.rustc.mir_borrowck.png)
 
-Good time for tracing&profile futures.
+#### tikv tracing support futures
+![tikv tracing](http://grainspring.github.io/imgs/tikv.tracing.png)
+
 
 ## License
-
 This project is licensed under the [MIT license](LICENSE).
 
 ### Contribution
-
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in Tracing by you, shall be licensed as MIT, without any additional
 terms or conditions.
